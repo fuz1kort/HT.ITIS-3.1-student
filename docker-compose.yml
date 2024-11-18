@@ -1,16 +1,7 @@
 version: '3.8'
 services:
   dotnet_postgres:
-    image: postgres:16
-    container_name: dotnet-hw-postgres
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: Dotnet.Homeworks
-    ports:
-      - "5434:5432"
-    volumes:
-      - dotnet_postgres_data:/var/lib/postgresql/data
+    image: postgres:alpine
     
   dotnet_rabbitmq:
     image: rabbitmq:3-management
@@ -37,17 +28,6 @@ services:
     
   dotnet_main:
     image: dotnet-web
-    build:
-      context: .
-      dockerfile: Dotnet.Homeworks.MainProject/Dockerfile
-    container_name: dotnet-web
-    environment:
-      ConnectionStrings__Default: "User ID=postgres;Password=password;Host=localhost;Port=5432;Database=Dotnet.Homeworks"
-    ports:
-      - "8080:8080"
-      - "8081:8081"
-    depends_on:
-      - dotnet_postgres
     
   dotnet_mailing:
     build:
@@ -68,14 +48,3 @@ services:
     
   dotnet_storage:
     image: dotnet-web
-  dotnet.homeworks.mainproject:
-    image: dotnet.homeworks.mainproject
-    build:
-      context: .
-      dockerfile: Dotnet.Homeworks.MainProject/Dockerfile
-
-  dotnet.homeworks.mainproject-1:
-    image: dotnet.homeworks.mainproject-1
-    build:
-      context: .
-      dockerfile: Dotnet.Homeworks.MainProject/Dockerfile
