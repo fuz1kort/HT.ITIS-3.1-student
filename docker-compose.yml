@@ -13,7 +13,18 @@ services:
       - dotnet_postgres_data:/var/lib/postgresql/data
     
   dotnet_rabbitmq:
-    image: rabbitmq:3-alpine
+    image: rabbitmq:3-management
+    environment:
+      - RABBITMQ_DEFAULT_USER=fuzikort
+      - RABBITMQ_DEFAULT_PASS=fuzikort
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    container_name: rabbitmq
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    networks:
+      - dotnet_network
     
   dotnet_minio:
     image: minio/minio:latest
@@ -39,7 +50,21 @@ services:
       - dotnet_postgres
     
   dotnet_mailing:
-    image: dotnet-web
+    build:
+      context: .
+      dockerfile: Dotnet.Homeworks.Mailing.API/Dockerfile
+    depends_on:
+      - dotnet_rabbitmq
+    environment:
+      EmailConfig__Email: "fuzikort@yandex.ru"
+      EmailConfig__Host: "smtp.yandex.ru"
+      EmailConfig__Port: "465"
+      EmailConfig__Password: "Gaffarov14/"
+      RabbitMqConfig__Username: ""
+      RabbitMqConfig__Password: "fuzikort"
+      RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
+    networks:
+      - dotnet_network
     
   dotnet_storage:
     image: dotnet-web
