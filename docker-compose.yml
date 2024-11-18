@@ -1,7 +1,7 @@
 version: '3.8'
 services:
   dotnet_postgres:
-    image: postgres:16
+    image: postgres:alpine
     container_name: dotnet-hw-postgres
     environment:
       POSTGRES_USER: postgres
@@ -11,9 +11,22 @@ services:
       - "5434:5432"
     volumes:
       - dotnet_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dotnet_network
   
   dotnet_rabbitmq:
-    image: rabbitmq:3-alpine
+    image: rabbitmq:3-management
+    environment:
+      RABBITMQ_DEFAULT_USER: fuzikort
+      RABBITMQ_DEFAULT_PASS: fuzikort
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    container_name: rabbitmq
+    volumes:
+      - ./rabbitmq:/var/lib/rabbitmq
+    networks:
+      - dotnet_network
   
   dotnet_minio:
     image: minio/minio:latest
@@ -24,33 +37,47 @@ services:
   dotnet_jaeger:
     image: jaegertracing/all-in-one:latest
   
+  
   dotnet_main:
-    image: dotnet-web
     build:
       context: .
       dockerfile: Dotnet.Homeworks.MainProject/Dockerfile
-    container_name: dotnet-web
-    environment:
-      ConnectionStrings__Default: "User ID=postgres;Password=password;Host=localhost;Port=5432;Database=Dotnet.Homeworks"
-    ports:
-      - "8080:8080"
-      - "8081:8081"
     depends_on:
       - dotnet_postgres
+      - dotnet_rabbitmq
+    environment:
+      ASPNETCORE_URLS: "http://*:80"
+      RabbitMqConfig__Username: "fuzikort"
+      RabbitMqConfig__Password: "fuzikort"
+      RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
+      ConnectionStrings__Default: "User ID=postgres;Password=password;Host=localhost;Port=5432;Database=Dotnet.Homeworks"
+    ports:
+      - "9000:80"
+    networks:
+      - dotnet_network
   
   dotnet_mailing:
-    image: dotnet-web
-  
+    build:
+      context: .
+      dockerfile: Dotnet.Homeworks.Mailing.API/Dockerfile
+    depends_on:
+      - dotnet_rabbitmq
+    environment:
+      EmailConfig__Email: "fuzikort@yandex.ru"
+      EmailConfig__Host: "smtp.yandex.ru"
+      EmailConfig__Port: "465"
+      EmailConfig__Password: "Gaffarov14"
+      RabbitMqConfig__Username: "fuzikort"
+      RabbitMqConfig__Password: "fuzikort"
+      RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
+    networks:
+      - dotnet_network
+
   dotnet_storage:
     image: dotnet-web
-  dotnet.homeworks.mainproject:
-    image: dotnet.homeworks.mainproject
-    build:
-      context: .
-      dockerfile: Dotnet.Homeworks.MainProject/Dockerfile
 
-  dotnet.homeworks.mainproject-1:
-    image: dotnet.homeworks.mainproject-1
-    build:
-      context: .
-      dockerfile: Dotnet.Homeworks.MainProject/Dockerfile
+volumes:
+  postgres_data:
+
+networks:
+  dotnet_network:
