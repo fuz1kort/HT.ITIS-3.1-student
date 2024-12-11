@@ -7,6 +7,7 @@ using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
 using Dotnet.Homeworks.Infrastructure.UnitOfWork;
 using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker.DependencyInjectionExtensions;
 using Dotnet.Homeworks.MainProject.Controllers;
+using Dotnet.Homeworks.Mediator;
 using Dotnet.Homeworks.Mediator.DependencyInjectionExtensions;
 using Dotnet.Homeworks.Shared.Dto;
 using Dotnet.Homeworks.Tests.Shared.RepositoriesMocks;
@@ -26,7 +27,7 @@ internal class CqrsEnvironmentBuilder : TestEnvironmentBuilder<CqrsEnvironment>
 
     private IUnitOfWork UnitOfWork { get; set; } = Substitute.For<IUnitOfWork>();
     private MediatR.IMediator MediatR { get; set; } = Substitute.For<MediatR.IMediator>();
-    private Mediator.IMediator CustomMediator { get; set; } = Substitute.For<Mediator.IMediator>();
+    private IMediator CustomMediator { get; set; } = Substitute.For<IMediator>();
     private ProductManagementController? ProductManagementController { get; set; }
 
     private bool _withMockedMediator;
@@ -89,7 +90,7 @@ internal class CqrsEnvironmentBuilder : TestEnvironmentBuilder<CqrsEnvironment>
             .SelectMany(x => x.GetTypes())
             .Where(type => type.GetInterfaces().Any(interfaceType =>
                 interfaceType.IsGenericType &&
-                interfaceType.GetGenericTypeDefinition() == typeof(Mediator.IPipelineBehavior<,>)));
+                interfaceType.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)));
 
         return pipelineBehaviors;
     }
@@ -155,7 +156,7 @@ internal class CqrsEnvironmentBuilder : TestEnvironmentBuilder<CqrsEnvironment>
             foreach (var type in types)
             {
                 configureServices += s => s
-                    .AddSingleton(typeof(Mediator.IPipelineBehavior<,>), type);
+                    .AddSingleton(typeof(IPipelineBehavior<,>), type);
             }
         }
 
@@ -167,7 +168,7 @@ internal class CqrsEnvironmentBuilder : TestEnvironmentBuilder<CqrsEnvironment>
         if (!_withMockedMediator)
         {
             if (IsCqrsComplete())
-                CustomMediator = ServiceProvider!.GetRequiredService<Mediator.IMediator>();
+                CustomMediator = ServiceProvider!.GetRequiredService<IMediator>();
             else
                 MediatR = ServiceProvider!.GetRequiredService<MediatR.IMediator>();
         }

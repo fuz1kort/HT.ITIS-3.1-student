@@ -9,9 +9,10 @@ public static class ServiceCollectionExtensions
         Assembly assembly
     )
     {
-        throw new NotImplementedException();
+        serviceCollection.AddScoped<IPermissionCheck, PermissionCheck>();
+        serviceCollection.AddHttpContextAccessor();
     }
-    
+
     public static void AddPermissionChecks(
         this IServiceCollection serviceCollection,
         Assembly[] assemblies

@@ -1,5 +1,4 @@
-
-using Dotnet.Homeworks.DataAccess.Helpers;
+using Dotnet.Homeworks.Mediator.DependencyInjectionExtensions;
 
 namespace Dotnet.Homeworks.MainProject.ServicesExtensions.MediatR;
 
@@ -7,10 +6,7 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddMediatR(this IServiceCollection services)
     {
-        services.AddMediatR(conf =>
-        {
-            conf.RegisterServicesFromAssembly(AssemblyReference.Assembly);
-        });
+        services.AddMediator();
 
         return services;
     }

@@ -5,9 +5,52 @@ namespace Dotnet.Homeworks.Mediator.DependencyInjectionExtensions;
 
 public static class ServiceCollectionExtensions
 {
-    //TODO: Register your custom mediator
     public static IServiceCollection AddMediator(this IServiceCollection services, params Assembly[] handlersAssemblies)
     {
-        throw new NotImplementedException();
+        if (handlersAssemblies == null || handlersAssemblies.Length == 0)
+        {
+            throw new ArgumentException("At least one assembly must be specified.");
+        }
+
+        var handlerTypes = handlersAssemblies.SelectMany(a => a.GetTypes()).ToList();
+
+        var handlers = handlerTypes
+            .Where(t => t is { IsClass: true, IsAbstract: false } &&
+                        t.GetInterfaces().Any(i => i.IsGenericType &&
+                                                   i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>)))
+            .ToList();
+
+        foreach (var handlerType in handlers)
+        {
+            foreach (var implementedInterface in handlerType.GetInterfaces())
+            {
+                if (implementedInterface.IsGenericType &&
+                    implementedInterface.GetGenericTypeDefinition() == typeof(IRequestHandler<,>))
+                {
+                    services.AddTransient(implementedInterface, handlerType);
+                }
+            }
+        }
+
+        handlers = handlerTypes
+            .Where(t => t is { IsClass: true, IsAbstract: false } &&
+                        t.GetInterfaces().Any(i => i.IsGenericType &&
+                                                   i.GetGenericTypeDefinition() == typeof(IRequestHandler<>)))
+            .ToList();
+
+        foreach (var handlerType in handlers)
+        {
+            foreach (var implementedInterface in handlerType.GetInterfaces())
+            {
+                if (implementedInterface.IsGenericType &&
+                    implementedInterface.GetGenericTypeDefinition() == typeof(IRequestHandler<>))
+                {
+                    services.AddTransient(implementedInterface, handlerType);
+                }
+            }
+        }
+
+        services.AddSingleton<IMediator, Services.Mediator>();
+        return services;
     }
 }
