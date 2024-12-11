@@ -1,11 +1,14 @@
-﻿namespace Dotnet.Homeworks.Infrastructure.Validation.Decorators;
+﻿using Dotnet.Homeworks.Mediator;
 
-public class CqrsDecorator<TRequest, TResponse> //TODO: Inherit certain interface 
+namespace Dotnet.Homeworks.Infrastructure.Validation.Decorators;
+
+public class CqrsDecorator<TRequest, TResponse> : IRequestHandler<TRequest, TResponse>
+    where TRequest : IRequest<TResponse>, TResponse
 {
     protected CqrsDecorator() : base()
     {
     }
 
-    public virtual Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
-        => throw new NotImplementedException();  //TODO: Decorator invoke parent's method: await base.Handle(request, cancellationToken);
+    public virtual async Task<TResponse> Handle(TRequest request, CancellationToken cancellationToken)
+        =>  await base.Handle(request, cancellationToken); 
 }

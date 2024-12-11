@@ -15,7 +15,7 @@ public static class ServiceCollectionExtensions
         var handlerTypes = handlersAssemblies.SelectMany(a => a.GetTypes()).ToList();
 
         var handlers = handlerTypes
-            .Where(t => t is { IsClass: true, IsAbstract: false } &&
+            .Where(t =>
                         t.GetInterfaces().Any(i => i.IsGenericType &&
                                                    i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>)))
             .ToList();
@@ -32,25 +32,7 @@ public static class ServiceCollectionExtensions
             }
         }
 
-        handlers = handlerTypes
-            .Where(t => t is { IsClass: true, IsAbstract: false } &&
-                        t.GetInterfaces().Any(i => i.IsGenericType &&
-                                                   i.GetGenericTypeDefinition() == typeof(IRequestHandler<>)))
-            .ToList();
-
-        foreach (var handlerType in handlers)
-        {
-            foreach (var implementedInterface in handlerType.GetInterfaces())
-            {
-                if (implementedInterface.IsGenericType &&
-                    implementedInterface.GetGenericTypeDefinition() == typeof(IRequestHandler<>))
-                {
-                    services.AddTransient(implementedInterface, handlerType);
-                }
-            }
-        }
-
-        services.AddSingleton<IMediator, Services.Mediator>();
+        services.AddSingleton<IMediator, Mediator>();
         return services;
     }
 }

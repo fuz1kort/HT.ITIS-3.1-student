@@ -2,6 +2,7 @@
 using Dotnet.Homeworks.Infrastructure.Utils;
 using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker.Enums;
 using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
+using Dotnet.Homeworks.Shared.Dto;
 
 namespace Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker;
 
@@ -14,17 +15,16 @@ public class PermissionCheck : IPermissionCheck
         _httpContextAccessor = httpContextAccessor;
     }
 
-    public Task<IEnumerable<PermissionResult>> CheckPermissionAsync<TRequest>(TRequest request)
-    {
-        var permissionResults = new List<PermissionResult>();
+    public Task<TResponse> CheckPermissionAsync<TRequest, TResponse>(TRequest request,
+        CancellationToken cancellationToken = default)
 
+    {
         var user = _httpContextAccessor.HttpContext?.User;
         PermissionResult permissionResult;
         if (user == null || !user.Identity!.IsAuthenticated)
         {
             permissionResult = new PermissionResult(false, "User is not authenticated");
-            permissionResults.Add(permissionResult);
-            return Task.FromResult<IEnumerable<PermissionResult>>(permissionResults);
+            return Task.FromResult((Result)permissionResult);
         }
 
         var requestType = request!.GetType();
@@ -35,12 +35,10 @@ public class PermissionCheck : IPermissionCheck
             && user.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Role)!.Value.Equals(Roles.Admin.ToString()))
         {
             permissionResult = new PermissionResult(true, "Access granted");
-            permissionResults.Add(permissionResult);
-            return Task.FromResult<IEnumerable<PermissionResult>>(permissionResults);
+            return Task.FromResult((TResponse)permissionResult);
         }
 
         permissionResult = new PermissionResult(false, "Access denied");
-        permissionResults.Add(permissionResult);
-        return Task.FromResult<IEnumerable<PermissionResult>>(permissionResults);
+        return Task.FromResult((TResponse)permissionResult);
     }
 }
