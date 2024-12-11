@@ -1,4 +1,3 @@
-using Dotnet.Homeworks.Infrastructure.Utils;
 using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker;
 using Dotnet.Homeworks.Mediator;
 using Dotnet.Homeworks.Shared.Dto;
@@ -9,7 +8,8 @@ namespace Dotnet.Homeworks.Infrastructure.Validation.Decorators;
 public class ValidationDecorator<TRequest, TResponse> : 
     PermissionCheckDecorator<TRequest, TResponse>, 
     IRequestHandler<TRequest, TResponse>
-    where TRequest : IRequest<TResponse> where TResponse : Result
+    where TRequest : IRequest<TResponse> 
+    where TResponse : Result
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -31,7 +31,7 @@ public class ValidationDecorator<TRequest, TResponse> :
 
         if (!_validators.Any())
         {
-            return (TResponse)ResultFactory.Create(true, typeof(TResponse));
+            return (TResponse)new Result(true);
         }
 
         var validationResultTasks = _validators
@@ -41,13 +41,9 @@ public class ValidationDecorator<TRequest, TResponse> :
         if (!validationResult.Any(x => x.IsValid))
         {
             var failures = validationResult.SelectMany(x => x.Errors);
-            return (TResponse)ResultFactory.Create(
-                false, 
-                typeof(TResponse),
-                null,
-                string.Join(";", failures.Select(x => x.ErrorMessage)));
+            return (TResponse)new Result(false, string.Join(";", failures.Select(x => x.ErrorMessage)));
         }
 
-        return (TResponse)ResultFactory.Create(true, typeof(TResponse));
+        return (TResponse)new Result(true);
     }
 }

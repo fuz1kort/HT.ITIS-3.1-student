@@ -1,6 +1,6 @@
 ﻿using Dotnet.Homeworks.Domain.Entities;
-using Dotnet.Homeworks.MainProject.Dto;
-using Dotnet.Homeworks.MainProject.Services;
+using Dotnet.Homeworks.Infrastructure.Dto;
+using Dotnet.Homeworks.Infrastructure.Services;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dotnet.Homeworks.MainProject.Controllers;

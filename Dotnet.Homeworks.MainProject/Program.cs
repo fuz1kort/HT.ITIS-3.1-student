@@ -1,5 +1,5 @@
+using Dotnet.Homeworks.Infrastructure.Services;
 using Dotnet.Homeworks.MainProject.Configuration;
-using Dotnet.Homeworks.MainProject.Services;
 using Dotnet.Homeworks.MainProject.ServicesExtensions.DataAccess;
 using Dotnet.Homeworks.MainProject.ServicesExtensions.Masstransit;
 using Dotnet.Homeworks.MainProject.ServicesExtensions.MediatR;
@@ -20,8 +20,6 @@ builder.Services.AddSingleton<ICommunicationService, CommunicationService>();
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie();
 
-builder.Services.AddScoped<IRegistrationService, RegistrationService>();
-builder.Services.AddScoped<ICommunicationService, CommunicationService>();
 builder.Services.Configure<RabbitMqConfig>(builder.Configuration.GetSection(nameof(RabbitMqConfig)));
 builder.Services.AddMasstransitRabbitMq(rabbitMqConfig);
 

@@ -17,29 +17,18 @@ public class Mediator : IMediator
         var requestType = request.GetType();
         var handlerType = typeof(IRequestHandler<,>).MakeGenericType(requestType, typeof(TResponse));
         
-        // var handler = _serviceProvider.GetService(handlerType);
-        var serv = _serviceProvider.GetRequiredService(handlerType);
-        return (Task<TResponse>)serv.GetType().GetMethod("Handle")!.Invoke(serv, new object[] { request, cancellationToken })!;
-        // var serv = handler as IRequestHandler<IRequest<TResponse>, TResponse>;
-
-        // if(_serviceProvider.GetService(handlerType) 
-        //    is not IRequestHandler<IRequest<TResponse>, TResponse> service)
-        // {
-        //     throw new InvalidOperationException($"No handler registered for {requestType}");
-        // }
-        
-
-        // return await serv!.Handle(request, cancellationToken);
+        var service = _serviceProvider.GetRequiredService(handlerType);
+        return (Task<TResponse>)service.GetType().GetMethod("Handle")!.Invoke(service, new object[] { request, cancellationToken })!;
     }
 
-    public async Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
+    public Task Send<TRequest>(TRequest request, CancellationToken cancellationToken = default)
         where TRequest : IRequest
     {
-        if (_serviceProvider.GetService(typeof(IRequestHandler<TRequest>))
-            is not IRequestHandler<TRequest> service)
-            throw new InvalidOperationException();
-
-        await service.Handle(request, cancellationToken);
+        var requestType = request.GetType();
+        var handlerType = typeof(IRequestHandler<>).MakeGenericType(requestType);
+        
+        var service = _serviceProvider.GetRequiredService(handlerType);
+        return Task.FromResult((Task)service.GetType().GetMethod("Handle")!.Invoke(service, new object[] { request, cancellationToken })!);
     }
 
     public async Task<dynamic?> Send(dynamic request, CancellationToken cancellationToken = default)
