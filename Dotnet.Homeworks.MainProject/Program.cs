@@ -14,8 +14,8 @@ var rabbitMqConfig = builder.Configuration
                          .Get<RabbitMqConfig>()
                      ?? throw new ApplicationException("Not supported rabbitMq settings");
 
-builder.Services.AddSingleton<IRegistrationService, RegistrationService>();
 builder.Services.AddSingleton<ICommunicationService, CommunicationService>();
+builder.Services.AddSingleton<IRegistrationService, RegistrationService>();
 
 builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
     .AddCookie();
