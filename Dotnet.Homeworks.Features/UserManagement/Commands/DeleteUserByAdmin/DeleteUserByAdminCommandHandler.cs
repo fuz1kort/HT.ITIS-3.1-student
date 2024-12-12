@@ -5,7 +5,8 @@ using Dotnet.Homeworks.Shared.Dto;
 
 namespace Dotnet.Homeworks.Features.UserManagement.Commands.DeleteUserByAdmin;
 
-public class DeleteUserByAdminCommandHandler : ICommandHandler<DeleteUserByAdminCommand>
+public class DeleteUserByAdminCommandHandler : 
+    ICommandHandler<DeleteUserByAdminCommand>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -25,17 +26,17 @@ public class DeleteUserByAdminCommandHandler : ICommandHandler<DeleteUserByAdmin
             var user = await _userRepository.GetUserByGuidAsync(request.Guid, cancellationToken);
             if (user == null)
             {
-                return new Result(false, $"User with id {request.Guid} not found");
+                return ResultFactory.CreateResult<Result>(false, error: $"User with id {request.Guid} not found");
             }
 
             await _userRepository.DeleteUserByGuidAsync(request.Guid, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new Result(true);
+            return ResultFactory.CreateResult<Result>(true);
         }
         catch (Exception ex)
         {
-            return new Result(false, ex.Message);
+            return ResultFactory.CreateResult<Result>(false, error: ex.Message);
         }
     }
 }

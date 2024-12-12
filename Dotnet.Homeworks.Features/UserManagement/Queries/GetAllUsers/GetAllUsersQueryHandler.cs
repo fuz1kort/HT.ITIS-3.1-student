@@ -19,6 +19,6 @@ public class GetAllUsersQueryHandler: IQueryHandler<GetAllUsersQuery, GetAllUser
         var users = await _userRepository.GetUsersAsync(cancellationToken);
         var dto = new GetAllUsersDto(users.Select(x => new GetUserDto(x.Id, x.Name, x.Email)));
 
-        return new Result<GetAllUsersDto>(dto, true);
+        return ResultFactory.CreateResult<Result<GetAllUsersDto>>(true, value: dto);
     }
 }

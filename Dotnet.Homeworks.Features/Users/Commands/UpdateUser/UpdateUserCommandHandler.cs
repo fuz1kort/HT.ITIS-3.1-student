@@ -37,11 +37,11 @@ public class UpdateUserCommandHandler : CqrsDecorator<UpdateUserCommand, Result>
             await _userRepository.UpdateUserAsync(request.User, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new Result(true);
+            return ResultFactory.CreateResult<Result>(true);
         }
         catch (Exception ex)
         {
-            return new Result(false, ex.Message);
+            return ResultFactory.CreateResult<Result>(false, error: ex.Message);
         }
     }
 }

@@ -11,8 +11,8 @@ using FluentValidation;
 
 namespace Dotnet.Homeworks.Features.Users.Commands.CreateUser;
 
-public class CreateUserCommandHandler : 
-    CqrsDecorator<CreateUserCommand, Result<CreateUserDto>>, 
+public class CreateUserCommandHandler :
+    CqrsDecorator<CreateUserCommand, Result<CreateUserDto>>,
     ICommandHandler<CreateUserCommand, CreateUserDto>
 {
     private readonly IUserRepository _userRepository;
@@ -32,26 +32,28 @@ public class CreateUserCommandHandler :
         _registrationService = registrationService;
     }
 
-    public override async Task<Result<CreateUserDto>> Handle(CreateUserCommand request, CancellationToken cancellationToken)
+    public override async Task<Result<CreateUserDto>> Handle(CreateUserCommand request,
+        CancellationToken cancellationToken)
     {
         var res = await base.Handle(request, cancellationToken);
         if (res.IsFailure)
         {
             return res;
         }
-        
+
         try
         {
             var user = new User { Email = request.Email, Name = request.Name };
             var id = await _userRepository.InsertUserAsync(user, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
             await _registrationService.RegisterAsync(new RegisterUserDto(request.Name, request.Email));
+            var dto = new CreateUserDto(id);
 
-            return new Result<CreateUserDto>(new CreateUserDto(id), true);
+            return ResultFactory.CreateResult<Result<CreateUserDto>>(true, value: dto);
         }
         catch (Exception ex)
         {
-            return new Result<CreateUserDto>(default, false, ex.Message);
+            return ResultFactory.CreateResult<Result<CreateUserDto>>(true, error: ex.Message);
         }
     }
 }

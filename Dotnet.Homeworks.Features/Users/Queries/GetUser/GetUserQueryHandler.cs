@@ -7,7 +7,7 @@ using FluentValidation;
 
 namespace Dotnet.Homeworks.Features.Users.Queries.GetUser;
 
-public class GetUserQueryHandler : 
+public class GetUserQueryHandler :
     CqrsDecorator<GetUserQuery, Result<GetUserDto>>,
     IQueryHandler<GetUserQuery, GetUserDto>
 {
@@ -29,18 +29,18 @@ public class GetUserQueryHandler :
         {
             return res;
         }
-        
+
         try
         {
             var user = await _userRepository.GetUserByGuidAsync(request.Guid, cancellationToken);
-            
-            return user == null 
-                ? new Result<GetUserDto>(default, false, $"User with id {request.Guid} not found") 
-                : new Result<GetUserDto>(new GetUserDto(user.Id, user.Name, user.Email), true);
+
+            return user == null
+                ? ResultFactory.CreateResult<Result<GetUserDto>>(false, error: $"User with id {request.Guid} not found")
+                : ResultFactory.CreateResult<Result<GetUserDto>>(true, value: new GetUserDto(user.Id, user.Name, user.Email));
         }
         catch (Exception ex)
         {
-            return new Result<GetUserDto>(default, false, ex.Message);
+            return ResultFactory.CreateResult<Result<GetUserDto>>(false, error: ex.Message);
         }
     }
 }

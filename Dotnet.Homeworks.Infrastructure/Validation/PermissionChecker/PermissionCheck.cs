@@ -1,4 +1,5 @@
 ﻿using System.Reflection;
+using Dotnet.Homeworks.Infrastructure.Utils;
 using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
 using Dotnet.Homeworks.Shared.Dto;
 
@@ -14,30 +15,35 @@ public class PermissionCheck : IPermissionCheck
     }
 
     public async Task<TResponse> CheckPermissionAsync<TRequest, TResponse>(TRequest request,
-        CancellationToken cancellationToken) where TResponse : Result
+        CancellationToken cancellationToken)
     {
-        if (!typeof(TRequest)
+        if (request == null)
+        {
+            throw new ArgumentNullException(nameof(request));
+        }
+        
+        var requestType = request.GetType();
+        
+        if (!requestType
                 .GetInterfaces()
                 .Any(x =>
                     x == typeof(IClientRequest) ||
                     x == typeof(IAdminRequest)))
         {
-            return (TResponse)new Result(true);
+            return ResultFactory.CreateResult<TResponse>(true);
         }
 
-        var permissionCheckIface = GetPermissionCheckIfaceType(typeof(TRequest));
-        var permCheck = _serviceProvider.GetService(permissionCheckIface);
-        var method =
-            permissionCheckIface.GetMethod("CheckPermission", BindingFlags.Public | BindingFlags.Instance)!;
-        var task = (Task<TResponse>)method.Invoke(permCheck, new object[] { request! })!;
-        var permResults = await task;
-
-        if (permResults.IsSuccess)
-        {
-            return (TResponse)new Result(true);
-        }
-
-        return (TResponse)new Result(false, "Not enough permisssions");
+        var permissionCheckIface = GetPermissionCheckIfaceType(requestType);
+        
+        var permissionCheckService = _serviceProvider.GetRequiredService(permissionCheckIface);
+        
+        var permCheckType = permissionCheckService.GetType();
+        var permResult = await (Task<PermissionResult>)permCheckType.GetMethod("CheckPermission")!.Invoke(permissionCheckService,
+            new object[] { request, cancellationToken })!;
+        
+        return permResult.IsSuccess 
+            ? ResultFactory.CreateResult<TResponse>(true) 
+            : ResultFactory.CreateResult<TResponse>(false, error: "Not enough permisssions");
     }
 
     private static Type GetPermissionCheckIfaceType(Type requestType)

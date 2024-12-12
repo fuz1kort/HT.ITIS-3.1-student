@@ -8,7 +8,9 @@ using FluentValidation;
 
 namespace Dotnet.Homeworks.Features.Users.Commands.DeleteUser;
 
-public sealed class DeleteUserCommandHandler : CqrsDecorator<DeleteUserCommand, Result>, ICommandHandler<DeleteUserCommand>
+public sealed class DeleteUserCommandHandler : 
+    CqrsDecorator<DeleteUserCommand, Result>, 
+    ICommandHandler<DeleteUserCommand>
 {
     private readonly IUserRepository _userRepository;
     private readonly IUnitOfWork _unitOfWork;
@@ -37,17 +39,17 @@ public sealed class DeleteUserCommandHandler : CqrsDecorator<DeleteUserCommand, 
             var user = await _userRepository.GetUserByGuidAsync(request.Guid, cancellationToken);
             if (user == null)
             {
-                return new Result(false, $"User with id {request.Guid} not found");
+                return ResultFactory.CreateResult<Result>(false, error: $"User with id {request.Guid} not found");
             }
             
             await _userRepository.DeleteUserByGuidAsync(request.Guid, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return new Result(true);
+            return ResultFactory.CreateResult<Result>(true);
         }
         catch (Exception ex)
         {
-            return new Result(false, ex.Message);
+            return ResultFactory.CreateResult<Result>(false, error: ex.Message);
         }
     }
 }

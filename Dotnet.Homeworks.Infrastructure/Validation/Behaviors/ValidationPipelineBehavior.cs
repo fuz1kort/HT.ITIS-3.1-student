@@ -5,8 +5,6 @@ using FluentValidation;
 namespace Dotnet.Homeworks.Infrastructure.Validation.Behaviors;
 
 public class ValidationPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
-    where TRequest : IRequest<TResponse>
-    where TResponse : Result
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
 
@@ -30,7 +28,7 @@ public class ValidationPipelineBehavior<TRequest, TResponse> : IPipelineBehavior
         if (!validationResult.Any(x => x.IsValid))
         {
             var failures = validationResult.SelectMany(x => x.Errors);
-            return (TResponse)new Result(false, string.Join(";", failures.Select(x => x.ErrorMessage)));
+            return ResultFactory.CreateResult<TResponse>(false, error: string.Join(";", failures.Select(x => x.ErrorMessage)));
         }
 
         return await next();

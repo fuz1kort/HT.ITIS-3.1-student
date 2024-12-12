@@ -5,10 +5,10 @@ using FluentValidation;
 
 namespace Dotnet.Homeworks.Infrastructure.Validation.Decorators;
 
-public class ValidationDecorator<TRequest, TResponse> : 
-    PermissionCheckDecorator<TRequest, TResponse>, 
+public class ValidationDecorator<TRequest, TResponse> :
+    PermissionCheckDecorator<TRequest, TResponse>,
     IRequestHandler<TRequest, TResponse>
-    where TRequest : IRequest<TResponse> 
+    where TRequest : IRequest<TResponse>
     where TResponse : Result
 {
     private readonly IEnumerable<IValidator<TRequest>> _validators;
@@ -31,7 +31,7 @@ public class ValidationDecorator<TRequest, TResponse> :
 
         if (!_validators.Any())
         {
-            return (TResponse)new Result(true);
+            return ResultFactory.CreateResult<TResponse>(true);
         }
 
         var validationResultTasks = _validators
@@ -41,9 +41,10 @@ public class ValidationDecorator<TRequest, TResponse> :
         if (!validationResult.Any(x => x.IsValid))
         {
             var failures = validationResult.SelectMany(x => x.Errors);
-            return (TResponse)new Result(false, string.Join(";", failures.Select(x => x.ErrorMessage)));
+            return ResultFactory.CreateResult<TResponse>(false,
+                error: string.Join(";", failures.Select(x => x.ErrorMessage)));
         }
 
-        return (TResponse)new Result(true);
+        return ResultFactory.CreateResult<TResponse>(true);
     }
 }

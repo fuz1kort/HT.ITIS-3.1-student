@@ -20,14 +20,14 @@ public static class ServiceCollectionExtensions
                                                    i.GetGenericTypeDefinition() == typeof(IRequestHandler<,>)))
             .ToList();
 
-        foreach (var handlerType in handlers)
+        foreach (var handler in handlers)
         {
-            foreach (var implementedInterface in handlerType.GetInterfaces())
+            foreach (var implementedInterface in handler.GetInterfaces())
             {
                 if (implementedInterface.IsGenericType &&
                     implementedInterface.GetGenericTypeDefinition() == typeof(IRequestHandler<,>))
                 {
-                    services.AddTransient(implementedInterface, handlerType);
+                    services.AddTransient(implementedInterface, handler);
                 }
             }
         }
@@ -36,34 +36,24 @@ public static class ServiceCollectionExtensions
         return services;
     }
     
-    public static IServiceCollection AddPipelineBehaviorsForFeaturesNamespace(
-        this IServiceCollection services, 
+    public static IServiceCollection AddPipelineBehaviors(this IServiceCollection services, 
         string @namespace,  
         Assembly namespaceAssembly, 
         Assembly pipelineBehaviorsAssembly)
     {
-        var pipes = PipelineBehaviorFinder.FindPipelineBehaviorsInNamespace(
-            @namespace, 
-            namespaceAssembly, 
-            pipelineBehaviorsAssembly);
+        var pipelineBehaviorTypes = pipelineBehaviorsAssembly.GetTypes();
+        
+        var pipelineBehaviors = pipelineBehaviorTypes
+            .Where(t =>
+                t.GetInterfaces().Any(i => i.IsGenericType &&
+                                           i.GetGenericTypeDefinition() == typeof(IPipelineBehavior<,>)))
+            .ToList();
 
-        foreach (var (iface, impl) in pipes)
+        foreach (var pipelineBehavior in pipelineBehaviors)
         {
-            services.Add(new ServiceDescriptor(iface, impl, ServiceLifetime.Transient));
+            services.AddTransient(typeof(IPipelineBehavior<,>), pipelineBehavior);
         }
-
-        return services;
-    }
-
-    private static IServiceCollection AddHandlers(this IServiceCollection services, 
-        IEnumerable<(Type, Type)> handlers, 
-        ServiceLifetime lifetime)
-    {
-        foreach (var (iface, impl) in handlers)
-        {
-            services.Add(new ServiceDescriptor(iface, impl, lifetime));
-        }
-
+        
         return services;
     }
 }
