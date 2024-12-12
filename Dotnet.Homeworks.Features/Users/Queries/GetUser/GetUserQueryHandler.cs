@@ -1,20 +1,35 @@
 ﻿using Dotnet.Homeworks.Domain.Abstractions.Repositories;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
+using Dotnet.Homeworks.Infrastructure.Validation.Decorators;
+using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker;
 using Dotnet.Homeworks.Shared.Dto;
+using FluentValidation;
 
 namespace Dotnet.Homeworks.Features.Users.Queries.GetUser;
 
-public class GetUserQueryHandler : IQueryHandler<GetUserQuery, GetUserDto>
+public class GetUserQueryHandler : 
+    CqrsDecorator<GetUserQuery, Result<GetUserDto>>,
+    IQueryHandler<GetUserQuery, GetUserDto>
 {
     private readonly IUserRepository _userRepository;
 
-    public GetUserQueryHandler(IUserRepository userRepository)
+    public GetUserQueryHandler(
+        IEnumerable<IValidator<GetUserQuery>> validators,
+        IPermissionCheck permissionCheck,
+        IUserRepository userRepository
+    ) : base(validators, permissionCheck)
     {
         _userRepository = userRepository;
     }
 
-    public async Task<Result<GetUserDto>> Handle(GetUserQuery request, CancellationToken cancellationToken)
+    public override async Task<Result<GetUserDto>> Handle(GetUserQuery request, CancellationToken cancellationToken)
     {
+        var res = await base.Handle(request, cancellationToken);
+        if (res.IsFailure)
+        {
+            return res;
+        }
+        
         try
         {
             var user = await _userRepository.GetUserByGuidAsync(request.Guid, cancellationToken);

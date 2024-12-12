@@ -4,8 +4,10 @@ using Dotnet.Homeworks.Features.Products.Commands.InsertProduct;
 using Dotnet.Homeworks.Features.Products.Queries.GetProducts;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Commands;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
+using Dotnet.Homeworks.Infrastructure.Services;
 using Dotnet.Homeworks.Infrastructure.UnitOfWork;
 using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker.DependencyInjectionExtensions;
+using Dotnet.Homeworks.Mailing.API.Services;
 using Dotnet.Homeworks.MainProject.Controllers;
 using Dotnet.Homeworks.Mediator;
 using Dotnet.Homeworks.Mediator.DependencyInjectionExtensions;
@@ -13,6 +15,7 @@ using Dotnet.Homeworks.Shared.Dto;
 using Dotnet.Homeworks.Tests.Shared.RepositoriesMocks;
 using Dotnet.Homeworks.Tests.Shared.TestEnvironmentBuilder;
 using FluentValidation;
+using MassTransit;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using NSubstitute;
@@ -53,11 +56,16 @@ internal class CqrsEnvironmentBuilder : TestEnvironmentBuilder<CqrsEnvironment>
             .AddSingleton<UserManagementController>()
             .AddSingleton<IProductRepository>(ProductRepositoryMock)
             .AddSingleton<IUserRepository>(UserRepositoryMock)
+            .AddSingleton<ICommunicationService, CommunicationService>()
+            .AddSingleton<IRegistrationService, RegistrationService>()
+            .AddSingleton(Substitute.For<IMailingService>())
+            .AddMassTransitTestHarness()
             .AddSingleton(HttpContextAccessorMock)
             .AddSingleton(UnitOfWork);
-        if (IsCqrsComplete()) configureServices += s => s
-            .AddValidatorsFromAssembly(Features.Helpers.AssemblyReference.Assembly)
-            .AddPermissionChecks(Features.Helpers.AssemblyReference.Assembly);
+        if (IsCqrsComplete())
+            configureServices += s => s
+                .AddValidatorsFromAssembly(Features.Helpers.AssemblyReference.Assembly)
+                .AddPermissionChecks(Features.Helpers.AssemblyReference.Assembly);
 
         configureServices = SetupMediator(configureServices);
 
@@ -126,7 +134,7 @@ internal class CqrsEnvironmentBuilder : TestEnvironmentBuilder<CqrsEnvironment>
     }
 
     private static bool IsCqrsComplete() => IsHomeworkInProgressOrComplete(RunLogic.Homeworks.CqrsValidatorsDecorators);
-    
+
 
     private Action<IServiceCollection> SetupMediator(Action<IServiceCollection>? configureServices)
     {

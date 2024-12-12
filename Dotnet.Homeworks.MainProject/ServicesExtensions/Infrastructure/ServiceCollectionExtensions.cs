@@ -1,6 +1,7 @@
 ﻿using Dotnet.Homeworks.Features.Helpers;
 using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker.DependencyInjectionExtensions;
 using Dotnet.Homeworks.Mediator.DependencyInjectionExtensions;
+using FluentValidation;
 
 namespace Dotnet.Homeworks.MainProject.ServicesExtensions.Infrastructure;
 
