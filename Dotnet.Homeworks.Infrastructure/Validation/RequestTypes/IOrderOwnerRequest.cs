@@ -2,7 +2,7 @@
 
 namespace Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
 
-public interface IClientRequest : ISecureRequest
+public interface IOrderOwnerRequest : ISecureRequest
 {
-    public Guid Guid { get; }
+    public Guid OrderId { get; }
 }

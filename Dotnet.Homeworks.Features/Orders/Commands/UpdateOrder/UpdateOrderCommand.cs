@@ -1,6 +1,10 @@
+using Dotnet.Homeworks.Infrastructure.Cqrs.Commands;
+using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
+using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes.Base;
+
 namespace Dotnet.Homeworks.Features.Orders.Commands.UpdateOrder;
 
-public class UpdateOrderCommand // TODO: implement interface
+public class UpdateOrderCommand : IOrderOwnerRequest, ICommand
 {
     public UpdateOrderCommand(Guid orderId, IEnumerable<Guid> productsIds)
     {
