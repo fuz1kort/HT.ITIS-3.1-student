@@ -2,15 +2,14 @@ version: '3.8'
 services:
   dotnet_postgres:
     image: postgres:alpine
-    container_name: dotnet-hw-postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: password
       POSTGRES_DB: Dotnet.Homeworks
     ports:
-      - "5434:5432"
+      - "5435:5432"
     volumes:
-      - dotnet_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     networks:
       - dotnet_network
   
@@ -22,7 +21,6 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672"
-    container_name: rabbitmq
     volumes:
       - ./rabbitmq:/var/lib/rabbitmq
     networks:
@@ -30,6 +28,7 @@ services:
   
   dotnet_minio:
     image: minio/minio:latest
+    hostname: minio
     command: server --console-address ":9001" /data
     ports:
       - "9002:9000"
@@ -37,6 +36,8 @@ services:
     environment:
       MINIO_ROOT_USER: user
       MINIO_ROOT_PASSWORD: password
+    networks:
+      - dotnet_network
   
   dotnet_mongodb:
     image: mongo:latest
@@ -45,10 +46,13 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: user
       MONGO_INITDB_ROOT_PASSWORD: password
+    networks:
+      - dotnet_network
   
   dotnet_jaeger:
     image: jaegertracing/all-in-one:latest
-  
+    networks:
+      - dotnet_network
   
   dotnet_main:
     build:
@@ -63,8 +67,10 @@ services:
       RabbitMqConfig__Username: "fuzikort"
       RabbitMqConfig__Password: "fuzikort"
       RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
-      ConnectionStrings__Default: "User ID=postgres;Password=password;Host=localhost;Port=5432;Database=Dotnet.Homeworks"
+      ConnectionStrings__Default: "User ID=postgres;Password=password;Host=localhost;Port=5435;Database=Dotnet.Homeworks"
       MongoDbConfig__ConnectionString: "mongodb://user:password@dotnet_mongodb:27017"
+      MongoDbConfig__DatabaseName: "dotnet_homework"
+      MongoDbConfig__OrdersCollectionName: "orders"
     ports:
       - "9000:80"
     networks:
@@ -99,14 +105,16 @@ services:
       ASPNETCORE_URLS: http://*:8082
       MinioConfig__Username: user
       MinioConfig__Password: password
-      MinioConfig__Endpoint: dotnet_minio
+      MinioConfig__Endpoint: minio
       MinioConfig__Port: 9000
       MinioConfig__WithSsl: false
     depends_on:
       - dotnet_minio
+    networks:
+      - dotnet_network
 
 volumes:
   postgres_data:
-
+    
 networks:
   dotnet_network:

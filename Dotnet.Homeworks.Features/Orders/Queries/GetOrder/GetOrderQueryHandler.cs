@@ -1,4 +1,5 @@
 using Dotnet.Homeworks.Domain.Abstractions.Repositories;
+using Dotnet.Homeworks.Features.Orders.Mapping;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
 using Dotnet.Homeworks.Shared.Dto;
 
@@ -7,10 +8,12 @@ namespace Dotnet.Homeworks.Features.Orders.Queries.GetOrder;
 public class GetOrderQueryHandler : IQueryHandler<GetOrderQuery, GetOrderDto>
 {
     private readonly IOrderRepository _orderRepository;
+    private IOrderMapper _orderMapper;
 
-    public GetOrderQueryHandler(IOrderRepository orderRepository)
+    public GetOrderQueryHandler(IOrderRepository orderRepository, IOrderMapper orderMapper)
     {
         _orderRepository = orderRepository;
+        _orderMapper = orderMapper;
     }
 
     public async Task<Result<GetOrderDto>> Handle(GetOrderQuery request, CancellationToken cancellationToken)
@@ -23,7 +26,7 @@ public class GetOrderQueryHandler : IQueryHandler<GetOrderQuery, GetOrderDto>
                 return ResultFactory.CreateResult<Result<GetOrderDto>>(false, error: "Order is not found");
             }
 
-            var dto = new GetOrderDto(order.Id, order.ProductsIds);
+            var dto = _orderMapper.MapToGetOrderDto(order);
             return ResultFactory.CreateResult<Result<GetOrderDto>>(true, value: dto);
         }
         catch (Exception ex)

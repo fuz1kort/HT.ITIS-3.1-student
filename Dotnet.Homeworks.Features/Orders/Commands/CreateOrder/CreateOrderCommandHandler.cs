@@ -1,6 +1,6 @@
 using Dotnet.Homeworks.Domain.Abstractions.Repositories;
-using Dotnet.Homeworks.Domain.Entities;
 using Dotnet.Homeworks.Features.Helpers;
+using Dotnet.Homeworks.Features.Orders.Mapping;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Commands;
 using Dotnet.Homeworks.Shared.Dto;
 using Microsoft.AspNetCore.Http;
@@ -12,15 +12,18 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Cre
     private readonly IOrderRepository _orderRepository;
     private readonly IUserRepository _userRepository;
     private readonly HttpContext _httpContext;
+    private readonly IOrderMapper _orderMapper;
 
     public CreateOrderCommandHandler(
         IOrderRepository orderRepository,
         IUserRepository userRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        IOrderMapper orderMapper)
     {
         _orderRepository = orderRepository;
         _userRepository = userRepository;
         _httpContext = httpContextAccessor.HttpContext!;
+        _orderMapper = orderMapper;
     }
 
     public async Task<Result<CreateOrderDto>> Handle(CreateOrderCommand request, CancellationToken cancellationToken)
@@ -39,14 +42,11 @@ public class CreateOrderCommandHandler : ICommandHandler<CreateOrderCommand, Cre
                 return ResultFactory.CreateResult<Result<CreateOrderDto>>(false, error: "User is not found");
             }
 
-            var order = new Order
-            {
-                OrdererId = user.Id,
-                ProductsIds = request.ProductsIds
-            };
+            var order = _orderMapper.MapToOrder(request, userId.Value);
 
             var id = await _orderRepository.InsertOrderAsync(order, cancellationToken);
-            var dto = new CreateOrderDto(id);
+            var dto = _orderMapper.MapToCreateOrderDto(id);
+            
             return ResultFactory.CreateResult<Result<CreateOrderDto>>(true, value: dto);
         }
         catch (Exception ex)

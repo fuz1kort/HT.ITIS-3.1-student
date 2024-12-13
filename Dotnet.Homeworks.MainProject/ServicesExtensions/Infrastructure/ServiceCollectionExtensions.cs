@@ -12,7 +12,6 @@ public static class ServiceCollectionExtensions
         services.AddHttpContextAccessor();
         services.AddValidatorsFromAssembly(AssemblyReference.Assembly);
         services.AddPermissionChecks(AssemblyReference.Assembly);
-        services.AddMediator();
         services.AddPipelineBehaviors(Dotnet.Homeworks.Infrastructure.Helpers.AssemblyReference.Assembly);
 
         return services;

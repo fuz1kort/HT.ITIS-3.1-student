@@ -1,6 +1,5 @@
 using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
 using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
-using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes.Base;
 
 namespace Dotnet.Homeworks.Features.Orders.Queries.GetOrder;
 

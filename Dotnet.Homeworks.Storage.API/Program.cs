@@ -8,7 +8,8 @@ var builder = WebApplication.CreateBuilder(args);
 var minioConfig = builder.Configuration.GetSection("MinioConfig");
 
 builder.Services.Configure<MinioConfig>(minioConfig);
-builder.Services.AddMinioClient(minioConfig.Get<MinioConfig>());
+builder.Services.AddMinioClient(minioConfig.Get<MinioConfig>() 
+                                ?? throw new ApplicationException("Not supported minio settings"));
 builder.Services.AddSingleton<IStorageFactory, StorageFactory>();
 builder.Services.AddHostedService<PendingObjectsProcessor>();
 

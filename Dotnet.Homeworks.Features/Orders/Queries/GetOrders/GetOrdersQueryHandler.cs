@@ -1,6 +1,6 @@
 using Dotnet.Homeworks.Domain.Abstractions.Repositories;
 using Dotnet.Homeworks.Features.Helpers;
-using Dotnet.Homeworks.Features.Orders.Queries.GetOrder;
+using Dotnet.Homeworks.Features.Orders.Mapping;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
 using Dotnet.Homeworks.Shared.Dto;
 using Microsoft.AspNetCore.Http;
@@ -11,12 +11,14 @@ public class GetOrdersQueryHandler : IQueryHandler<GetOrdersQuery, GetOrdersDto>
 {
     private readonly IOrderRepository _orderRepository;
     private readonly HttpContext _httpContext;
+    private IOrderMapper _orderMapper;
 
     public GetOrdersQueryHandler(
         IOrderRepository orderRepository,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor, IOrderMapper orderMapper)
     {
         _orderRepository = orderRepository;
+        _orderMapper = orderMapper;
         _httpContext = httpContextAccessor.HttpContext!;
     }
 
@@ -31,7 +33,7 @@ public class GetOrdersQueryHandler : IQueryHandler<GetOrdersQuery, GetOrdersDto>
             }
 
             var orders = await _orderRepository.GetAllOrdersFromUserAsync(userId.Value, cancellationToken);
-            var dto = new GetOrdersDto(orders.Select(x => new GetOrderDto(x.Id, x.ProductsIds)));
+            var dto = _orderMapper.MapToGetOrdersDto(orders);
             return ResultFactory.CreateResult<Result<GetOrdersDto>>(true, value: dto);
         }
         catch (Exception ex)

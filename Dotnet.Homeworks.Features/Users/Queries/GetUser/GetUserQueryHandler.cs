@@ -1,4 +1,5 @@
 ﻿using Dotnet.Homeworks.Domain.Abstractions.Repositories;
+using Dotnet.Homeworks.Features.Users.Mapping;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Queries;
 using Dotnet.Homeworks.Infrastructure.Validation.Decorators;
 using Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker;
@@ -12,14 +13,16 @@ public class GetUserQueryHandler :
     IQueryHandler<GetUserQuery, GetUserDto>
 {
     private readonly IUserRepository _userRepository;
+    private readonly IUserMapper _userMapper;
 
     public GetUserQueryHandler(
         IEnumerable<IValidator<GetUserQuery>> validators,
         IPermissionCheck permissionCheck,
-        IUserRepository userRepository
-    ) : base(validators, permissionCheck)
+        IUserRepository userRepository, 
+        IUserMapper userMapper) : base(validators, permissionCheck)
     {
         _userRepository = userRepository;
+        _userMapper = userMapper;
     }
 
     public override async Task<Result<GetUserDto>> Handle(GetUserQuery request, CancellationToken cancellationToken)
@@ -34,9 +37,14 @@ public class GetUserQueryHandler :
         {
             var user = await _userRepository.GetUserByGuidAsync(request.Guid, cancellationToken);
 
-            return user == null
-                ? ResultFactory.CreateResult<Result<GetUserDto>>(false, error: $"User with id {request.Guid} not found")
-                : ResultFactory.CreateResult<Result<GetUserDto>>(true, value: new GetUserDto(user.Id, user.Name, user.Email));
+            if (user == null)
+            {
+                return ResultFactory.CreateResult<Result<GetUserDto>>(false, error: $"User with id {request.Guid} not found");
+            }
+
+            var dto = _userMapper.MapToGetUserDto(user);
+            
+            return ResultFactory.CreateResult<Result<GetUserDto>>(true, value: dto);
         }
         catch (Exception ex)
         {

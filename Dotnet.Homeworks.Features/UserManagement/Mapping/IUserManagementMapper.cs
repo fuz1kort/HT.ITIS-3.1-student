@@ -1,6 +1,19 @@
-﻿namespace Dotnet.Homeworks.Features.UserManagement.Mapping;
+﻿using Dotnet.Homeworks.Domain.Entities;
+using Dotnet.Homeworks.Features.UserManagement.Queries.GetAllUsers;
+using Dotnet.Homeworks.Infrastructure.Utils;
+using Mapster;
 
-public interface IUserManagementMapper
+namespace Dotnet.Homeworks.Features.UserManagement.Mapping;
+
+public interface IUserManagementMapper : IMapper
 {
-    // TODO: implement
+    GetAllUsersDto MapToGetAllUsersDto(IQueryable<User> users);
+}
+
+public class UserManagementMapper : IUserManagementMapper
+{
+    public GetAllUsersDto MapToGetAllUsersDto(IQueryable<User> users)
+    {
+        return users.Adapt<GetAllUsersDto>();
+    }
 }
