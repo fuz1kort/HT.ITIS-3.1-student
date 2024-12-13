@@ -1,5 +1,5 @@
 using Dotnet.Homeworks.Domain.Abstractions.Repositories;
-using Dotnet.Homeworks.Domain.Entities;
+using Dotnet.Homeworks.Features.Products.Mapping;
 using Dotnet.Homeworks.Infrastructure.Cqrs.Commands;
 using Dotnet.Homeworks.Infrastructure.UnitOfWork;
 using Dotnet.Homeworks.Shared.Dto;
@@ -10,12 +10,14 @@ internal sealed class InsertProductCommandHandler : ICommandHandler<InsertProduc
 {
     private readonly IProductRepository _repository;
     private readonly IUnitOfWork _unitOfWork;
+    private readonly IProductMapper _productMapper;
 
     public InsertProductCommandHandler(IProductRepository repository,
-        IUnitOfWork unitOfWork)
+        IUnitOfWork unitOfWork, IProductMapper productMapper)
     {
         _repository = repository;
         _unitOfWork = unitOfWork;
+        _productMapper = productMapper;
     }
 
     public async Task<Result<InsertProductDto>> Handle(InsertProductCommand request,
@@ -23,14 +25,14 @@ internal sealed class InsertProductCommandHandler : ICommandHandler<InsertProduc
     {
         try
         {
-            var newProduct = new Product() { Name = request.Name };
+            var newProduct = _productMapper.MapToProduct(request);
 
             var productGuid = await _repository.InsertProductAsync(newProduct, cancellationToken);
             await _unitOfWork.SaveChangesAsync(cancellationToken);
 
-            return ResultFactory.CreateResult<Result<InsertProductDto>>(
-                true,
-                value : new InsertProductDto(productGuid)
+            var dto = _productMapper.MapToInsertProductDto(productGuid);
+
+            return ResultFactory.CreateResult<Result<InsertProductDto>>(true, value: dto
             );
         }
         catch (Exception ex)
