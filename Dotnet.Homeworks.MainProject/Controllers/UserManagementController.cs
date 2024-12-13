@@ -1,6 +1,12 @@
 ﻿using Dotnet.Homeworks.Domain.Entities;
-using Dotnet.Homeworks.MainProject.Dto;
-using Dotnet.Homeworks.MainProject.Services;
+using Dotnet.Homeworks.Features.UserManagement.Commands.DeleteUserByAdmin;
+using Dotnet.Homeworks.Features.UserManagement.Queries.GetAllUsers;
+using Dotnet.Homeworks.Features.Users.Commands.CreateUser;
+using Dotnet.Homeworks.Features.Users.Commands.DeleteUser;
+using Dotnet.Homeworks.Features.Users.Commands.UpdateUser;
+using Dotnet.Homeworks.Features.Users.Queries.GetUser;
+using Dotnet.Homeworks.Infrastructure.Dto;
+using Dotnet.Homeworks.Mediator;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Dotnet.Homeworks.MainProject.Controllers;
@@ -8,49 +14,65 @@ namespace Dotnet.Homeworks.MainProject.Controllers;
 [ApiController]
 public class UserManagementController : ControllerBase
 {
-    private readonly IRegistrationService _registrationService;
-    
-    public UserManagementController(IRegistrationService registrationService) => _registrationService = registrationService;
+    private readonly IMediator _mediator;
+
+    public UserManagementController(
+        IMediator mediator)
+    {
+        _mediator = mediator;
+    }
     
     [HttpPost("user")]
     public async Task<IActionResult> CreateUser(RegisterUserDto userDto, CancellationToken cancellationToken)
     {
-        var user = new User
-        {
-            Email = userDto.Email,
-            Name = userDto.Name
-        };
-        await _registrationService.RegisterAsync(userDto);
-        return Ok(user.Email);
+        var result = await _mediator.Send(new CreateUserCommand(userDto.Name, userDto.Email), cancellationToken);
+        return result.IsSuccess 
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
     }
 
     [HttpGet("profile/{guid}")]
-    public Task<IActionResult> GetProfile(Guid guid, CancellationToken cancellationToken) 
+    public async Task<IActionResult> GetProfile(Guid guid, CancellationToken cancellationToken) 
     {
-        throw new NotImplementedException();
+        var result = await _mediator.Send(new GetUserQuery(guid), cancellationToken);
+        return result.IsSuccess 
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
     }
-
+    
     [HttpGet("users")]
-    public Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAllUsers(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await _mediator.Send(new GetAllUsersQuery(), cancellationToken);
+        return result.IsSuccess
+            ? Ok(result.Value)
+            : BadRequest(result.Error);
     }
 
     [HttpDelete("profile/{guid:guid}")]
-    public Task<IActionResult> DeleteProfile(Guid guid, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteProfile(Guid guid, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await _mediator.Send(new DeleteUserCommand(guid), cancellationToken);
+        return result.IsSuccess 
+            ? NoContent()
+            : BadRequest(result.Error);
     }
 
     [HttpPut("profile")]
-    public Task<IActionResult> UpdateProfile(User user, CancellationToken cancellationToken)
+    public async Task<IActionResult> UpdateProfile(User user, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await _mediator.Send(new UpdateUserCommand(user), cancellationToken);
+        return result.IsSuccess 
+            ? NoContent()
+            : BadRequest(result.Error);
     }
 
     [HttpDelete("user/{guid:guid}")]
-    public Task<IActionResult> DeleteUser(Guid guid, CancellationToken cancellationToken)
+    public async Task<IActionResult> DeleteUser(Guid guid, CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var result = await _mediator.Send(new DeleteUserByAdminCommand(guid), cancellationToken);
+        return result.IsSuccess
+            ? NoContent()
+            : BadRequest(result.Error);
     }
 }

@@ -8,7 +8,7 @@ internal sealed class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, 
 {
     private readonly IProductRepository _repository;
 
-    public GetProductsQueryHandler(IProductRepository repository) 
+    public GetProductsQueryHandler(IProductRepository repository)
         => _repository = repository;
 
     public async Task<Result<GetProductsDto>> Handle(GetProductsQuery request, CancellationToken cancellationToken)
@@ -18,11 +18,11 @@ internal sealed class GetProductsQueryHandler : IQueryHandler<GetProductsQuery, 
             var allProducts = await _repository.GetAllProductsAsync(cancellationToken);
             var allProductsDto = allProducts.Select(p => new GetProductDto(p.Id, p.Name));
 
-            return new Result<GetProductsDto>(new GetProductsDto(allProductsDto), true);
+            return ResultFactory.CreateResult<Result<GetProductsDto>>(true, value: new GetProductsDto(allProductsDto));
         }
         catch (Exception ex)
         {
-            return new Result<GetProductsDto>(val: null, false, error: ex.Message);
+            return ResultFactory.CreateResult<Result<GetProductsDto>>(false, error: ex.Message);
         }
     }
 }

@@ -4,19 +4,26 @@ namespace Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker.Dependenc
 
 public static class ServiceCollectionExtensions
 {
+    // public static void AddPermissionChecks(
+    //     this IServiceCollection serviceCollection,
+    //     Assembly assembly
+    // )
+    // {
+    // }
+
     public static void AddPermissionChecks(
         this IServiceCollection serviceCollection,
-        Assembly assembly
+        params Assembly[] assemblies
     )
     {
-        throw new NotImplementedException();
-    }
-    
-    public static void AddPermissionChecks(
-        this IServiceCollection serviceCollection,
-        Assembly[] assemblies
-    )
-    {
-        throw new NotImplementedException();
+        serviceCollection.AddScoped<IPermissionCheck, PermissionCheck>();
+        serviceCollection.AddHttpContextAccessor();
+        var tuples = PermissionCheck.GetPermissionChecksFrom(assemblies);
+        tuples.ForEach(tuple =>
+        {
+            serviceCollection.AddScoped(tuple.Iface, tuple.Impl);
+        });
+
+        serviceCollection.AddScoped<IPermissionCheck, PermissionCheck>();
     }
 }
