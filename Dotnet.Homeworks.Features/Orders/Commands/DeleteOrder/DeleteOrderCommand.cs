@@ -1,11 +1,14 @@
+using Dotnet.Homeworks.Infrastructure.Cqrs.Commands;
+using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
+
 namespace Dotnet.Homeworks.Features.Orders.Commands.DeleteOrder;
 
-public class DeleteOrderByGuidCommand // TODO: implement interface
+public class DeleteOrderByGuidCommand : IOrderOwnerRequest, ICommand
 {
-    public DeleteOrderByGuidCommand(Guid id)
+    public DeleteOrderByGuidCommand(Guid orderId)
     {
-        Id = id;
+        OrderId = orderId;
     }
 
-    public Guid Id { get; init; }
+    public Guid OrderId { get; init; }
 }

@@ -40,6 +40,11 @@ services:
   
   dotnet_mongodb:
     image: mongo:latest
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: user
+      MONGO_INITDB_ROOT_PASSWORD: password
   
   dotnet_jaeger:
     image: jaegertracing/all-in-one:latest
@@ -52,12 +57,14 @@ services:
     depends_on:
       - dotnet_postgres
       - dotnet_rabbitmq
+      - dotnet_mongodb
     environment:
       ASPNETCORE_URLS: "http://*:80"
       RabbitMqConfig__Username: "fuzikort"
       RabbitMqConfig__Password: "fuzikort"
       RabbitMqConfig__Hostname: "dotnet_rabbitmq:5672"
       ConnectionStrings__Default: "User ID=postgres;Password=password;Host=localhost;Port=5432;Database=Dotnet.Homeworks"
+      MongoDbConfig__ConnectionString: "mongodb://user:password@dotnet_mongodb:27017"
     ports:
       - "9000:80"
     networks:

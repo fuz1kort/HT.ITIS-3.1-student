@@ -3,6 +3,7 @@ using Dotnet.Homeworks.MainProject.Configuration;
 using Dotnet.Homeworks.MainProject.ServicesExtensions.DataAccess;
 using Dotnet.Homeworks.MainProject.ServicesExtensions.Infrastructure;
 using Dotnet.Homeworks.MainProject.ServicesExtensions.Masstransit;
+using Dotnet.Homeworks.MainProject.ServicesExtensions.MongoDb;
 using Dotnet.Homeworks.Shared.Dto;
 using Microsoft.AspNetCore.Authentication.Cookies;
 
@@ -28,6 +29,10 @@ builder.Services.AddTransient<ResultFactory>();
 // builder.Services.AddMediatR();
 builder.Services.AddInfrastructure();
 builder.Services.AddDataAccess(builder.Configuration);
+builder.Services.AddMongoClient(builder.Configuration
+                                    .GetSection(nameof(MongoDbConfig))
+                                    .Get<MongoDbConfig>()
+                                ?? throw new ApplicationException("Not supported mongoDb settings"));
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();

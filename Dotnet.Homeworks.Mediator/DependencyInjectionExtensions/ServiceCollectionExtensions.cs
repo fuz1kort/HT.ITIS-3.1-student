@@ -37,8 +37,6 @@ public static class ServiceCollectionExtensions
     }
     
     public static IServiceCollection AddPipelineBehaviors(this IServiceCollection services, 
-        string @namespace,  
-        Assembly namespaceAssembly, 
         Assembly pipelineBehaviorsAssembly)
     {
         var pipelineBehaviorTypes = pipelineBehaviorsAssembly.GetTypes();

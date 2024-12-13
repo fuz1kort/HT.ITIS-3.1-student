@@ -1,6 +1,7 @@
 ﻿using System.Reflection;
 using Dotnet.Homeworks.Infrastructure.Utils;
 using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes;
+using Dotnet.Homeworks.Infrastructure.Validation.RequestTypes.Base;
 using Dotnet.Homeworks.Shared.Dto;
 
 namespace Dotnet.Homeworks.Infrastructure.Validation.PermissionChecker;
@@ -21,41 +22,34 @@ public class PermissionCheck : IPermissionCheck
         {
             throw new ArgumentNullException(nameof(request));
         }
-        
+
         var requestType = request.GetType();
-        
-        if (!requestType
-                .GetInterfaces()
-                .Any(x =>
-                    x == typeof(IClientRequest) ||
-                    x == typeof(IAdminRequest)))
+
+        if (requestType.GetInterfaces().All(x => x != typeof(ISecureRequest)))
         {
             return ResultFactory.CreateResult<TResponse>(true);
         }
 
         var permissionCheckIface = GetPermissionCheckIfaceType(requestType);
-        
+
         var permissionCheckService = _serviceProvider.GetRequiredService(permissionCheckIface);
-        
+
         var permCheckType = permissionCheckService.GetType();
-        var permResult = await (Task<PermissionResult>)permCheckType.GetMethod("CheckPermission")!.Invoke(permissionCheckService,
+        var permResult = await (Task<PermissionResult>)permCheckType.GetMethod("CheckPermission")!.Invoke(
+            permissionCheckService,
             new object[] { request, cancellationToken })!;
-        
-        return permResult.IsSuccess 
-            ? ResultFactory.CreateResult<TResponse>(true) 
+
+        return permResult.IsSuccess
+            ? ResultFactory.CreateResult<TResponse>(true)
             : ResultFactory.CreateResult<TResponse>(false, error: "Not enough permisssions");
     }
 
     private static Type GetPermissionCheckIfaceType(Type requestType)
     {
-        var ifaces = new[]
-        {
-            requestType.GetInterface(nameof(IClientRequest)),
-            requestType.GetInterface(nameof(IAdminRequest))
-        };
+        var ifaces = requestType.GetInterfaces().Where(x => typeof(ISecureRequest).IsAssignableFrom(x));
 
         return typeof(IPermissionCheck<>)
-            .MakeGenericType(ifaces.First(x => x is not null)
+            .MakeGenericType(ifaces.First()
                              ?? throw new InvalidOperationException(
                                  "Request doesn't implement any interface to check permission"));
     }
