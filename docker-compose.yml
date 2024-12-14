@@ -49,11 +49,6 @@ services:
     networks:
       - dotnet_network
   
-  dotnet_jaeger:
-    image: jaegertracing/all-in-one:latest
-    networks:
-      - dotnet_network
-  
   dotnet_main:
     build:
       context: .
@@ -62,6 +57,7 @@ services:
       - dotnet_postgres
       - dotnet_rabbitmq
       - dotnet_mongodb
+      - dotnet_jaeger
     environment:
       ASPNETCORE_URLS: "http://*:80"
       RabbitMqConfig__Username: "fuzikort"
@@ -71,10 +67,18 @@ services:
       MongoDbConfig__ConnectionString: "mongodb://user:password@dotnet_mongodb:27017"
       MongoDbConfig__DatabaseName: "dotnet_homework"
       MongoDbConfig__OrdersCollectionName: "orders"
+      OpenTelemetryConfig__OtlpExporterEndpoint: "http://localhost:16686"
     ports:
       - "9000:80"
+        
+  dotnet_jaeger:
+    image: jaegertracing/all-in-one:latest
     networks:
       - dotnet_network
+    ports:
+      - "16686:16686"
+    environment:
+      COLLECTOR_OTLP_ENABLED: true
   
   dotnet_mailing:
     build:
